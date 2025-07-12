@@ -7,6 +7,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QComboBox>
+#include "mangasources/mangadex.h"
 #include "ui_mangainfowidget.h"
 
 MangaInfoWidget::MangaInfoWidget(QWidget *parent)
@@ -269,5 +270,17 @@ void MangaInfoWidget::on_comboBoxLanguage_currentIndexChanged(int index)
     if (!languageBox->isVisible())
         return;
     selectedLanguage = languageBox->itemText(index);
+
+    if (!currentmanga.isNull())
+    {
+        auto *dex = dynamic_cast<MangaDex *>(currentmanga->mangaSource);
+        if (dex)
+        {
+            QString lang = selectedLanguage == "All" ? QString() : selectedLanguage;
+            dex->setLanguageFilter(lang);
+            dex->updateMangaInfoAsync(currentmanga, false);
+        }
+    }
+
     updateInfos();
 }
