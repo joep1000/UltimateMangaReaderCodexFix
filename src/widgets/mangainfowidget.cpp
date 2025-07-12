@@ -3,11 +3,15 @@
 #include <QResizeEvent>
 #include <QScrollBar>
 
-#include "qstringlistmodel.h"
+#include <QStandardItemModel>
+#include <QToolButton>
+#include <QMenu>
+#include <QComboBox>
 #include "ui_mangainfowidget.h"
 
 MangaInfoWidget::MangaInfoWidget(QWidget *parent)
-    : QWidget(parent), ui(new Ui::MangaInfoWidget), currentmanga()
+    : QWidget(parent), ui(new Ui::MangaInfoWidget), currentmanga(), manageDownloadsButton(nullptr),
+      languageBox(nullptr), selectedChapter(-1)
 {
     ui->setupUi(this);
     adjustUI();
@@ -34,6 +38,32 @@ void MangaInfoWidget::adjustUI()
     ui->toolButtonDownload->setFixedSize(SIZES.buttonSizeToggleFavorite, SIZES.buttonSizeToggleFavorite);
     ui->toolButtonDownload->setIconSize(
         QSize(SIZES.buttonSizeToggleFavorite * 0.8, SIZES.buttonSizeToggleFavorite * 0.8));
+
+    if (!manageDownloadsButton)
+    {
+        manageDownloadsButton = new QToolButton(this);
+        manageDownloadsButton->setIcon(QIcon(":/images/icons/file-error.png"));
+        manageDownloadsButton->setFixedSize(SIZES.buttonSizeToggleFavorite, SIZES.buttonSizeToggleFavorite);
+        manageDownloadsButton->setIconSize(QSize(SIZES.buttonSizeToggleFavorite * 0.8,
+                                                SIZES.buttonSizeToggleFavorite * 0.8));
+        manageDownloadsButton->setPopupMode(QToolButton::InstantPopup);
+        QMenu *menu = new QMenu(manageDownloadsButton);
+        menu->addAction("Delete Chapter", this, SLOT(on_actionDeleteChapter()));
+        menu->addAction("Delete All", this, SLOT(on_actionDeleteAll()));
+        menu->addAction("Delete Read", this, SLOT(on_actionDeleteRead()));
+        manageDownloadsButton->setMenu(menu);
+        ui->horizontalLayout_6->addWidget(manageDownloadsButton);
+    }
+
+    if (!languageBox)
+    {
+        languageBox = new QComboBox(this);
+        languageBox->setVisible(false);
+        languageBox->setFixedHeight(SIZES.buttonSize);
+        connect(languageBox, SIGNAL(currentIndexChanged(int)), this,
+                SLOT(on_comboBoxLanguage_currentIndexChanged(int)));
+        ui->horizontalLayout_6->insertWidget(2, languageBox);
+    }
 
     ui->labelMangaInfoCover->setScaledContents(true);
 
@@ -76,6 +106,7 @@ void MangaInfoWidget::setManga(QSharedPointer<MangaInfo> manga)
         QObject::connect(currentmanga.get(), &MangaInfo::coverLoaded, this, &MangaInfoWidget::updateCover);
     }
 
+    selectedLanguage = "All";
     updateInfos();
     updateCover();
 }
@@ -109,13 +140,47 @@ void MangaInfoWidget::updateCover()
 
 void MangaInfoWidget::updateInfos()
 {
-    QStringList list;
+    selectedChapter = -1;
+    QStandardItemModel *model = new QStandardItemModel(this);
+    ReadingProgress progress(currentmanga->hostname, currentmanga->title);
+
+    QStringList langList = currentmanga->languages;
+    languageBox->clear();
+    if (langList.size() > 1)
+    {
+        languageBox->addItem("All");
+        languageBox->addItems(langList);
+        languageBox->setVisible(true);
+        int idx = languageBox->findText(selectedLanguage);
+        if (idx < 0)
+            idx = 0;
+        languageBox->setCurrentIndex(idx);
+    }
+    else
+    {
+        languageBox->setVisible(false);
+        selectedLanguage = "All";
+    }
 
     for (int i = 0; i < currentmanga->chapters.size(); i++)
-        list.insert(0, QString("%1: %2").arg(i + 1).arg(currentmanga->chapters[i].chapterTitle));
+    {
+        const auto &ch = currentmanga->chapters[i];
+        if (!selectedLanguage.isEmpty() && selectedLanguage != "All" && ch.language != selectedLanguage)
+            continue;
 
-    QStringListModel *model = new QStringListModel(this);
-    model->setStringList(list);
+        QString text = QString("%1: %2").arg(i + 1).arg(ch.chapterTitle);
+        DownloadImageDescriptor dd("", currentmanga->title, i, 0);
+        if (QFile::exists(currentmanga->mangaSource->getImagePath(dd)))
+            text = QChar(0x2713) + QString(" ") + text;
+
+        QStandardItem *item = new QStandardItem(text);
+        QFont f = item->font();
+        if (i >= progress.index.chapter)
+            f.setBold(true);
+        item->setFont(f);
+        item->setData(i); // store chapter index
+        model->insertRow(0, item);
+    }
 
     if (ui->listViewChapters->model() != nullptr)
         ui->listViewChapters->model()->deleteLater();
@@ -156,7 +221,8 @@ void MangaInfoWidget::on_toolButtonAddFavorites_clicked()
 
 void MangaInfoWidget::on_listViewChapters_clicked(const QModelIndex &index)
 {
-    emit readMangaClicked({static_cast<int>(currentmanga->chapters.count() - 1 - index.row()), 0});
+    selectedChapter = index.data().toInt();
+    emit readMangaClicked({selectedChapter, 0});
 }
 
 void MangaInfoWidget::on_pushButtonReadLatest_clicked()
@@ -178,4 +244,30 @@ void MangaInfoWidget::on_toolButtonDownload_clicked()
 {
     if (!currentmanga.isNull())
         emit downloadMangaClicked();
+}
+
+void MangaInfoWidget::on_actionDeleteChapter()
+{
+    if (!currentmanga.isNull() && selectedChapter >= 0)
+        emit deleteChapterClicked(selectedChapter);
+}
+
+void MangaInfoWidget::on_actionDeleteAll()
+{
+    if (!currentmanga.isNull())
+        emit deleteAllClicked();
+}
+
+void MangaInfoWidget::on_actionDeleteRead()
+{
+    if (!currentmanga.isNull())
+        emit deleteReadClicked();
+}
+
+void MangaInfoWidget::on_comboBoxLanguage_currentIndexChanged(int index)
+{
+    if (!languageBox->isVisible())
+        return;
+    selectedLanguage = languageBox->itemText(index);
+    updateInfos();
 }

@@ -40,6 +40,8 @@ public:
 
     MangaChapterCollection chapters;
 
+    QStringList languages;
+
     QScopedPointer<QMutex> updateMutex;
 
     void updateCompeted(bool updated, const QList<QPair<int, int>> &moveMap);

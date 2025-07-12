@@ -42,6 +42,9 @@ public:
     void setCurrentManga(const QString &mangaUrl, const QString &mangatitle);
 
     void clearDownloadCache(ClearDownloadCacheLevel level);
+    void deleteChapterData(QSharedPointer<MangaInfo> info, int chapter);
+    void deleteAllChapterData(QSharedPointer<MangaInfo> info);
+    void deleteReadChapterData(QSharedPointer<MangaInfo> info);
     void updateActiveScources();
 
     void updateMangaLists(QSharedPointer<UpdateProgressToken> progressToken);
