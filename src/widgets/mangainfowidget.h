@@ -38,6 +38,7 @@ signals:
 public slots:
     void updateManga(bool newchapters);
     void updateCover();
+    void refreshInfos();
 
 private slots:
     void on_toolButtonAddFavorites_clicked();

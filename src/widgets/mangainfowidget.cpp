@@ -138,6 +138,11 @@ void MangaInfoWidget::updateCover()
     }
 }
 
+void MangaInfoWidget::refreshInfos()
+{
+    updateInfos();
+}
+
 void MangaInfoWidget::updateInfos()
 {
     selectedChapter = -1;

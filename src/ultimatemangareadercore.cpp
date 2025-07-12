@@ -176,11 +176,13 @@ void UltimateMangaReaderCore::deleteChapterData(QSharedPointer<MangaInfo> info, 
     QDir dir(CONF.mangaimagesdir(info->hostname, info->title));
     for (const QFileInfo &fi : dir.entryInfoList(QStringList{QString("%1_*").arg(chapter)}, QDir::Files))
         QFile::remove(fi.absoluteFilePath());
+    emit chapterDataDeleted(info);
 }
 
 void UltimateMangaReaderCore::deleteAllChapterData(QSharedPointer<MangaInfo> info)
 {
     removeDir(CONF.mangaimagesdir(info->hostname, info->title));
+    emit chapterDataDeleted(info);
 }
 
 void UltimateMangaReaderCore::deleteReadChapterData(QSharedPointer<MangaInfo> info)
@@ -188,6 +190,7 @@ void UltimateMangaReaderCore::deleteReadChapterData(QSharedPointer<MangaInfo> in
     ReadingProgress progress(info->hostname, info->title);
     for (int c = 0; c < progress.index.chapter; ++c)
         deleteChapterData(info, c);
+    emit chapterDataDeleted(info);
 }
 
 void UltimateMangaReaderCore::updateMangaLists(QSharedPointer<UpdateProgressToken> progressToken)

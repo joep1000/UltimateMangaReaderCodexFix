@@ -63,6 +63,8 @@ signals:
 
     void downloadCacheCleared(ClearDownloadCacheLevel level);
 
+    void chapterDataDeleted(QSharedPointer<MangaInfo> info);
+
     void error(const QString &error);
 
     void timeTick();
