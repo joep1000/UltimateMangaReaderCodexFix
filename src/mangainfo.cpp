@@ -18,6 +18,10 @@ QSharedPointer<MangaInfo> MangaInfo::deserialize(AbstractMangaSource *mangasourc
     QDataStream in(&file);
     in >> mi->hostname >> mi->title >> mi->url >> mi->author >> mi->artist >> mi->releaseYear >> mi->status >>
         mi->genres >> mi->summary >> mi->coverUrl >> mi->coverPath >> mi->chapters;
+    if (!in.atEnd())
+        in >> mi->languages;
+    else
+        mi->languages.clear();
 
     file.close();
 
@@ -32,7 +36,7 @@ void MangaInfo::serialize()
 
     QDataStream out(&file);
     out << hostname << title << url << author << artist << releaseYear << status << genres << summary
-        << coverUrl << coverPath << chapters;
+        << coverUrl << coverPath << chapters << languages;
 
     file.close();
 }
