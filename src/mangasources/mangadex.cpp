@@ -34,7 +34,7 @@ MangaDex::MangaDex(NetworkManager *dm) : AbstractMangaSource(dm)
     name = "MangaDex";
     apiUrl = "https://api.mangadex.org";
     baseUrl = apiUrl;
-    languageFilter = "en";
+    languageFilter = "";
 
     networkManager->addCookie(".mangadex.org", "mangadex_h_toggle", "1");
     networkManager->addCookie(".mangadex.org", "mangadex_title_mode", "2");
