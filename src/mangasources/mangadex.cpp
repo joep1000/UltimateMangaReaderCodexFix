@@ -34,7 +34,7 @@ MangaDex::MangaDex(NetworkManager *dm) : AbstractMangaSource(dm)
     name = "MangaDex";
     apiUrl = "https://api.mangadex.org";
     baseUrl = apiUrl;
-    serverUrls = {"http://uploads.mangadex.org/data/", "http://s5.mangadex.org/data/"};
+    languageFilter = "en";
 
     networkManager->addCookie(".mangadex.org", "mangadex_h_toggle", "1");
     networkManager->addCookie(".mangadex.org", "mangadex_title_mode", "2");
@@ -213,9 +213,10 @@ Result<MangaChapterCollection, QString> MangaDex::updateMangaInfoFinishedLoading
         int totalchapters = 100;
         QStringList chapternumberlist;
 
+        QSet<QString> languagesSet;
         for (int offset = 0; offset < totalchapters; offset += 100)
         {
-            auto params = QString("manga=%1&limit=100&offset=%2&translatedLanguage[]=en")
+            auto params = QString("manga=%1&limit=100&offset=%2")
                               .arg(getStringSafe(doc["data"], "id"))
                               .arg(offset);
             auto jobChapters = networkManager->downloadAsString(apiUrl + "/chapter?" + params, -1);
@@ -237,6 +238,11 @@ Result<MangaChapterCollection, QString> MangaDex::updateMangaInfoFinishedLoading
                     auto chapterId = getStringSafe(r, "id");
                     const auto &attributes = r["attributes"];
                     auto externalUrl = getStringSafe(attributes, "externalUrl");
+                    auto lang = getStringSafe(attributes, "translatedLanguage");
+                    languagesSet.insert(lang);
+
+                    if (!languageFilter.isEmpty() && lang != languageFilter)
+                        continue;
 
                     if (chapterId == "" || externalUrl != "")
                         continue;
@@ -251,6 +257,7 @@ Result<MangaChapterCollection, QString> MangaDex::updateMangaInfoFinishedLoading
                         chapterTitle += " " + getStringSafe(attributes, "title");
 
                     MangaChapter mangaChapter(chapterTitle, chapterId);
+                    mangaChapter.language = lang;
                     mangaChapter.chapterNumber = padChapterNumber(numChapter);
                     newchapters.append(mangaChapter);
                     chapternumberlist.append(padChapterNumber(numChapter));
@@ -289,6 +296,7 @@ Result<MangaChapterCollection, QString> MangaDex::updateMangaInfoFinishedLoading
         return Err(QString("Coulnd't parse manga infos."));
     }
 
+    info->languages = languagesSet.values();
     return Ok(newchapters);
 }
 
@@ -309,12 +317,13 @@ Result<QStringList, QString> MangaDex::getPageList(const QString &chapterUrl)
         if (getStringSafe(chapterdoc, "result") == "error")
             return Err(QString("Couldn't parse page list."));
 
+        auto base = getStringSafe(chapterdoc, "baseUrl");
         auto hash = getStringSafe(chapterdoc["chapter"], "hash");
 
         auto pages = chapterdoc["chapter"]["data"].GetArray();
 
         for (const auto &page : pages)
-            imageUrls.append(serverUrls.first() + hash + "/" + page.GetString());
+            imageUrls.append(base + "/data/" + hash + "/" + page.GetString());
     }
     catch (QException &)
     {

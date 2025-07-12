@@ -23,10 +23,14 @@ public:
         QSharedPointer<DownloadStringJob> job, QSharedPointer<MangaInfo> info) override;
     Result<QStringList, QString> getPageList(const QString &chapterUrl) override;
 
+    void setLanguageFilter(const QString &lang) { languageFilter = lang; }
+    QString getLanguageFilter() const { return languageFilter; }
+
 private:
     void login();
     QString apiUrl;
-    QVector<QString> serverUrls;
+
+    QString languageFilter;
 
     QVector<QString> statuses;
     QVector<QString> demographies;

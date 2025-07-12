@@ -165,9 +165,21 @@ MainWidget::MainWidget(QWidget *parent)
 
     QObject::connect(ui->mangaInfoWidget, &MangaInfoWidget::downloadMangaClicked,
                      [this]()
-                     {
-                         downloadMangaChaptersDialog->show(core->mangaController->currentManga,
-                                                           core->mangaController->currentIndex.chapter);
+                    { 
+                        downloadMangaChaptersDialog->show(core->mangaController->currentManga,
+                                                          core->mangaController->currentIndex.chapter);
+                    });
+    QObject::connect(ui->mangaInfoWidget, &MangaInfoWidget::deleteChapterClicked,
+                     [this](int ch) {
+                         core->deleteChapterData(core->mangaController->currentManga, ch);
+                     });
+    QObject::connect(ui->mangaInfoWidget, &MangaInfoWidget::deleteAllClicked,
+                     [this]() {
+                         core->deleteAllChapterData(core->mangaController->currentManga);
+                     });
+    QObject::connect(ui->mangaInfoWidget, &MangaInfoWidget::deleteReadClicked,
+                     [this]() {
+                         core->deleteReadChapterData(core->mangaController->currentManga);
                      });
 
     // FavoritesWidget

@@ -31,6 +31,9 @@ signals:
     void readMangaClicked(const MangaIndex &index);
     void readMangaContinueClicked();
     void downloadMangaClicked();
+    void deleteChapterClicked(int chapter);
+    void deleteAllClicked();
+    void deleteReadClicked();
 
 public slots:
     void updateManga(bool newchapters);
@@ -46,11 +49,19 @@ private slots:
     void on_pushButtonReadFirst_clicked();
 
     void on_toolButtonDownload_clicked();
+    void on_actionDeleteChapter();
+    void on_actionDeleteAll();
+    void on_actionDeleteRead();
+    void on_comboBoxLanguage_currentIndexChanged(int index);
 
 private:
     Ui::MangaInfoWidget *ui;
 
     QSharedPointer<MangaInfo> currentmanga;
+    QToolButton *manageDownloadsButton;
+    QComboBox *languageBox;
+    int selectedChapter;
+    QString selectedLanguage;
 
     void adjustUI();
 

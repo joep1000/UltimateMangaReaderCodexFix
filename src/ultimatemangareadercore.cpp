@@ -171,6 +171,25 @@ void UltimateMangaReaderCore::clearDownloadCache(ClearDownloadCacheLevel level)
     emit downloadCacheCleared(level);
 }
 
+void UltimateMangaReaderCore::deleteChapterData(QSharedPointer<MangaInfo> info, int chapter)
+{
+    QDir dir(CONF.mangaimagesdir(info->hostname, info->title));
+    for (const QFileInfo &fi : dir.entryInfoList(QStringList{QString("%1_*").arg(chapter)}, QDir::Files))
+        QFile::remove(fi.absoluteFilePath());
+}
+
+void UltimateMangaReaderCore::deleteAllChapterData(QSharedPointer<MangaInfo> info)
+{
+    removeDir(CONF.mangaimagesdir(info->hostname, info->title));
+}
+
+void UltimateMangaReaderCore::deleteReadChapterData(QSharedPointer<MangaInfo> info)
+{
+    ReadingProgress progress(info->hostname, info->title);
+    for (int c = 0; c < progress.index.chapter; ++c)
+        deleteChapterData(info, c);
+}
+
 void UltimateMangaReaderCore::updateMangaLists(QSharedPointer<UpdateProgressToken> progressToken)
 {
     for (const auto& name : progressToken->sourcesProgress.keys())

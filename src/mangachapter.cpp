@@ -1,11 +1,14 @@
 #include "mangachapter.h"
 
-MangaChapter::MangaChapter() : chapterTitle(), chapterUrl(), pagesLoaded(false), pageUrlList(), imageUrlList()
+MangaChapter::MangaChapter()
+    : chapterTitle(), chapterUrl(), pagesLoaded(false), pageUrlList(), imageUrlList(),
+      language()
 {
 }
 
 MangaChapter::MangaChapter(const QString &title, const QString &url)
-    : chapterTitle(title), chapterUrl(url), pagesLoaded(false), pageUrlList(), imageUrlList()
+    : chapterTitle(title), chapterUrl(url), pagesLoaded(false), pageUrlList(), imageUrlList(),
+      language()
 {
 }
 
