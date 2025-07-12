@@ -104,6 +104,8 @@ MainWidget::MainWidget(QWidget *parent)
 
     QObject::connect(core, &UltimateMangaReaderCore::downloadCacheCleared,
                      [this]() { ui->mangaReaderWidget->clearCache(); });
+    QObject::connect(core, &UltimateMangaReaderCore::chapterDataDeleted,
+                     ui->mangaInfoWidget, &MangaInfoWidget::refreshInfos);
 
     // MangaController
     QObject::connect(core->mangaController, &MangaController::currentMangaChanged,
